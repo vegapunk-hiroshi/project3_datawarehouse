@@ -16,13 +16,13 @@ song_table_drop = "DROP TABLE IF EXISTS song"
 artist_table_drop = "DROP TABLE IF EXISTS artist"
 time_table_drop = "DROP TABLE IF EXISTS time"
 
-# CREATE TABLES
+# CREATE ANALYTICAL TABLES
 
 songplay_table_create = ("""
 CREATE TABLE songplay (
-songplay_id      VARCHAR, 
+songplay_id      INT IDENTITY (1, 1) PRIMARY KEY, 
 start_time       TIMESTAMP,
-user_id          INT        NOT NULL,
+user_id          INT,
 level            VARCHAR,
 song_id          VARCHAR,
 artist_id        VARCHAR,
@@ -44,7 +44,7 @@ level            VARCHAR
 
 song_table_create = ("""
 CREATE TABLE song (
-song_id          VARCHAR, 
+song_id          VARCHAR,
 title            VARCHAR, 
 artist_id        VARCHAR, 
 year             INT, 
@@ -65,24 +65,25 @@ longitude        FLOAT
 time_table_create = ("""
 CREATE TABLE time (
 start_time       TIMESTAMP,
-hour             INT, 
-day              INT, 
-week             INT, 
-month            INT, 
-year             INT, 
-weekday          INT
+hour             DATE, 
+day              DATE, 
+week             DATE, 
+month            DATE, 
+year             DATE, 
+weekday          DATE
 )
 """)
 
+## CREATE STAGING TABLE
 
 staging_events_table_create = ("""
 CREATE TABLE staging_events(
 artist           VARCHAR,
-auth             VARCHAR  NOT NULL,  
-firstName        VARCHAR  NOT NULL,
+auth             VARCHAR,  
+firstName        VARCHAR,
 gender           VARCHAR,
-iteminSession    INT      NOT NULL,
-lastName         VARCHAR  NOT NULL,
+iteminSession    INT,
+lastName         VARCHAR,
 length           FLOAT,
 level            VARCHAR,
 location         VARCHAR,
@@ -94,21 +95,21 @@ song             VARCHAR,
 status           INT,
 ts               BIGINT,
 userAgent        VARCHAR,
-userId           INT      NOT NULL
+userId           INT
 )
 """)
 
 staging_songs_table_create = ("""
 CREATE TABLE staging_songs(
-num_songs        INT      NOT NULL,
-artist_id        VARCHAR  NOT NULL,
+num_songs        INT,
+artist_id        VARCHAR,
 artist_latitude  FLOAT,
 artist_longitude FLOAT,
 artist_location  VARCHAR,
-artist_name      VARCHAR  NOT NULL,
-song_id          VARCHAR  NOT NULL,
-title            VARCHAR  NOT NULL,
-duration         VARCHAR  NOT NULL,
+artist_name      VARCHAR,
+song_id          VARCHAR ,
+title            VARCHAR,
+duration         VARCHAR,
 year             INT
 )
 """)
@@ -129,27 +130,107 @@ staging_songs_copy = ("""
     json 'auto'
 """).format(config.get('S3', 'SONG_DATA'), config.get('IAM_ROLE','ARN'))
 
-# FINAL TABLES
+# INSERT TABLES
 
 songplay_table_insert = ("""
 INSERT INTO songplay (
-songplay_id, start_time, userId, level, song_id, artist_id, sessionId, location, user_agent)
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+start_time, 
+user_id, 
+level, 
+song_id, 
+artist_id, 
+sessionId, 
+location, 
+user_agent)
+SELECT 
+(TIMESTAMP 'epoch' + se.ts/1000*INTERVAL '1 second') AS start_time, 
+        se.userId,
+        se.level,
+        ss.song_id,
+        ss.artist_id,
+        se.sessionId,
+        se.location,
+        se.userAgent
+    FROM staging_events se
+        LEFT JOIN staging_songs ss
+            ON se.song = ss.title
+        WHERE se.page='NextSong' ;
 """)
 
-
 user_table_insert = ("""
-
+INSERT INTO users (
+user_id, 
+firstName, 
+lastName, 
+gender, 
+level
+)
+SELECT DISTINCT
+se.userId,
+se.firstName,
+se.lastName,
+se.gender,
+se.level
+FROM staging_events se 
+WHERE page='NextSong' 
 """)
 
 song_table_insert = ("""
+INSERT INTO song (
+song_id,
+title,
+artist_id,
+year,
+duration
+) 
+SELECT DISTINCT
+ss.song_id,
+ss.title,
+ss.artist_id,
+ss.duration,
+CAST(ss.year as INTEGER) year
+FROM staging_songs ss
 """)
 
 artist_table_insert = ("""
-""")
+INSERT INTO artist (
+artist_id        ,
+name             ,
+location         , 
+lattitude        , 
+longitude        
+)
+SELECT DISTINCT 
+ss.artist_id,
+ss.artist_name,
+se.location,
+ss.latitude,
+ss.longitude
+FROM staging_events se JOIN staging_songs ss
+ON (se.artist=ss.artist_name AND
+se.song=ss.title AND
+se.length=ss.duration)""")
 
 time_table_insert = ("""
-""")
+INSERT INTO time (
+start_time       ,
+hour             , 
+day              , 
+week             , 
+month            , 
+year             , 
+weekday          
+)
+SELECT DISTINCT 
+start_time,
+EXTRACT(HOUR FROM start_time) AS hour,
+EXTRACT(DAY FROM start_time) AS day,
+EXTRACT(WEEK FROM start_time) AS week,
+EXTRACT(MONTH FROM start_time) AS month,
+EXTRACT(YEAR FROM start_time) AS year,
+EXTRACT(DOW FROM start_time) AS weekday)
+FROM (SELECT DISTINCT '1970-01-01'::date + ts/1000 * interval '1 second' as start_time
+FROM staging_events) """)
 
 # QUERY LISTS
 
