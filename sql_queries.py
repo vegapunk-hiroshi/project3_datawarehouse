@@ -57,7 +57,7 @@ CREATE TABLE artist (
 artist_id        VARCHAR,
 name             VARCHAR,
 location         VARCHAR, 
-lattitude        FLOAT, 
+latitude        FLOAT, 
 longitude        FLOAT
 )
 """)
@@ -65,12 +65,12 @@ longitude        FLOAT
 time_table_create = ("""
 CREATE TABLE time (
 start_time       TIMESTAMP,
-hour             DATE, 
-day              DATE, 
-week             DATE, 
-month            DATE, 
-year             DATE, 
-weekday          DATE
+hour             INT, 
+day              INT, 
+week             INT, 
+month            INT, 
+year             INT, 
+weekday          INT
 )
 """)
 
@@ -182,13 +182,13 @@ title,
 artist_id,
 year,
 duration
-) 
+)
 SELECT DISTINCT
 ss.song_id,
 ss.title,
 ss.artist_id,
-ss.duration,
-CAST(ss.year as INTEGER) year
+ss.year,
+ss.duration
 FROM staging_songs ss
 """)
 
@@ -197,15 +197,15 @@ INSERT INTO artist (
 artist_id        ,
 name             ,
 location         , 
-lattitude        , 
-longitude        
+latitude        , 
+longitude
 )
 SELECT DISTINCT 
 ss.artist_id,
 ss.artist_name,
 se.location,
-ss.latitude,
-ss.longitude
+ss.artist_latitude,
+ss.artist_longitude
 FROM staging_events se JOIN staging_songs ss
 ON (se.artist=ss.artist_name AND
 se.song=ss.title AND
@@ -228,7 +228,7 @@ EXTRACT(DAY FROM start_time) AS day,
 EXTRACT(WEEK FROM start_time) AS week,
 EXTRACT(MONTH FROM start_time) AS month,
 EXTRACT(YEAR FROM start_time) AS year,
-EXTRACT(DOW FROM start_time) AS weekday)
+EXTRACT(DOW FROM start_time) AS weekday
 FROM (SELECT DISTINCT '1970-01-01'::date + ts/1000 * interval '1 second' as start_time
 FROM staging_events) """)
 

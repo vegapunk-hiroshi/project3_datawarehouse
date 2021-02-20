@@ -10,6 +10,8 @@ def drop_tables(cur, conn):
         
         cur.execute(query)
         conn.commit()
+        print('table dropped', query)
+        print('*'*30)
 
 
 def create_tables(cur, conn):
@@ -20,6 +22,8 @@ def create_tables(cur, conn):
 
         cur.execute(query)
         conn.commit()
+        print('table created', query)
+        print('*'*30)
 
 
 def main():
@@ -34,6 +38,7 @@ def main():
     config.read('dwh.cfg')
     
     conn = psycopg2.connect("host={} dbname={} user={} password={} port={}".format(*config['CLUSTER'].values()))
+    print('connected to redshift cluster')
     
     cur = conn.cursor();
 

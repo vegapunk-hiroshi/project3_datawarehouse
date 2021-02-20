@@ -10,6 +10,7 @@ def load_staging_tables(cur,conn):
     for query in copy_table_queries:
         cur.execute(query)
         conn.commit()
+        print(query, 'copied the data from s3 to staging table in redshift')
 
 
 def insert_tables(cur,conn):
@@ -19,7 +20,8 @@ def insert_tables(cur,conn):
     for query in insert_table_queries:
         cur.execute(query)
         conn.commit()
-
+        print(query, 'inserted the data to staging table to fact and dimensional table')
+        print('*'*30)
 
 def main():
     """
@@ -34,9 +36,11 @@ def main():
     
     conn = psycopg2.connect("host={} dbname={} user={} password={} port={}"
                             .format(*config['CLUSTER'].values()))
+    print('connected to redshift cluster')
+    print('*'*30)
 
     cur = conn.cursor()
-            
+    
     load_staging_tables(cur, conn)
     
     insert_tables(cur, conn)
