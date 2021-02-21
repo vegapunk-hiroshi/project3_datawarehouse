@@ -133,7 +133,7 @@ staging_songs_copy = ("""
 # INSERT TABLES
 
 songplay_table_insert = ("""
-INSERT INTO songplay (DISTINCT 
+INSERT INTO songplay ( 
 start_time, 
 user_id, 
 level, 
@@ -142,7 +142,7 @@ artist_id,
 sessionId, 
 location, 
 user_agent)
-SELECT 
+SELECT DISTINCT
 (TIMESTAMP 'epoch' + se.ts/1000*INTERVAL '1 second') AS start_time, 
         se.userId,
         se.level,
