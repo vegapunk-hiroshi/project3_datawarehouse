@@ -7,26 +7,27 @@ A music streaming startup, Sparkify, has grown their user base and song database
 As their data engineer, I'm tasked with building an ETL pipeline that extracts their data from S3, stages them in Redshift, and transforms data into a set of dimensional tables for their analytics team to continue finding insights in what songs their users are listening to. You'll be able to test your database and ETL pipeline by running queries given to you by the analytics team from Sparkify and compare your results with their expected results.
 
 ## Design of Dimensional Tables for Song Play Analysis
-Using the song and event log datasets, we will need to create a star schema optimized for queries on song play analysis in the Redshift cluster. This includes the following tables.
+Using the song and event log datasets, we will need to create a star schema optimized for queries on song play analysis in the Redshift cluster. This includes the following tables. We will atach distkey or/and sortkey in order to have faster proccess.
 
 * Fact Table
 
-	1. 	songplays - records in event data associated with song plays i.e. records with page NextSong
+	1. 	songplay - records in event data associated with song plays i.e. records with page NextSong
 
 
 * Dimension Tables
 
 	1. users - users in the app
 	user_id, first_name, last_name, gender, level
-	2. songs - songs in music database
+	2. song - songs in music database
 	song_id, title, artist_id, year, duration
-	3. artists - artists in music database
+	3. artist - artists in music database
 	artist_id, name, location, lattitude, longitude
 	4. time - timestamps of records in songplays broken down into specific units
 	start_time, hour, day, week, month, year, weekday
 
 ![star table](./Star_schema.png)
 
+## 
 
 ## Files Included in the REPO:
 
