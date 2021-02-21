@@ -133,7 +133,7 @@ staging_songs_copy = ("""
 # INSERT TABLES
 
 songplay_table_insert = ("""
-INSERT INTO songplay (
+INSERT INTO songplay (DISTINCT 
 start_time, 
 user_id, 
 level, 
