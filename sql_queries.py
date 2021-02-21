@@ -11,60 +11,46 @@ config.read('dwh.cfg')
 staging_events_table_drop = "DROP TABLE IF EXISTS staging_events"
 staging_songs_table_drop = "DROP TABLE IF EXISTS staging_songs"
 songplay_table_drop = "DROP TABLE IF EXISTS songplay"
-user_table_drop = "DROP TABLE IF EXISTS users"
-song_table_drop = "DROP TABLE IF EXISTS song"
-artist_table_drop = "DROP TABLE IF EXISTS artist"
-time_table_drop = "DROP TABLE IF EXISTS time"
+user_table_drop = "DROP TABLE IF EXISTS users CASCADE"
+song_table_drop = "DROP TABLE IF EXISTS song CASCADE"
+artist_table_drop = "DROP TABLE IF EXISTS artist CASCADE"
+time_table_drop = "DROP TABLE IF EXISTS time CASCADE"
 
 # CREATE ANALYTICAL TABLES
-
-songplay_table_create = ("""
-CREATE TABLE songplay (
-songplay_id      INT IDENTITY (1, 1) PRIMARY KEY, 
-start_time       TIMESTAMP,
-user_id          INT,
-level            VARCHAR,
-song_id          VARCHAR,
-artist_id        VARCHAR,
-sessionId        INT,
-location         VARCHAR, 
-user_agent       VARCHAR
-)
-""")
-
-user_table_create = ("""
+user_table_create = """
 CREATE TABLE users (
-user_id          INT PRIMARY KEY,
-firstName        VARCHAR, 
-lastName         VARCHAR, 
+user_id          INT PRIMARY KEY sortkey, 
+first_name       VARCHAR, 
+last_name        VARCHAR, 
 gender           VARCHAR, 
 level            VARCHAR
 )
-""")
+diststyle all;
+"""
 
-song_table_create = ("""
+song_table_create = """
 CREATE TABLE song (
-song_id          VARCHAR PRIMARY KEY,
-title            VARCHAR, 
+song_id          VARCHAR PRIMARY KEY sortkey distkey,
+title            VARCHAR,
 artist_id        VARCHAR, 
 year             INT, 
-duration         VARCHAR
+duration         FLOAT
 )
-""")
+"""
 
 artist_table_create = ("""
 CREATE TABLE artist (
-artist_id        VARCHAR PRIMARY KEY,
-name             VARCHAR,
-location         VARCHAR, 
-latitude         FLOAT, 
-longitude        FLOAT
+artist_id        VARCHAR PRIMARY KEY sortkey distkey,
+artist_name      VARCHAR,
+artist_location  VARCHAR, 
+artist_latitude  FLOAT, 
+artist_longitude FLOAT
 )
 """)
 
 time_table_create = ("""
 CREATE TABLE time (
-start_time       TIMESTAMP PRIMARY KEY,
+start_time       TIMESTAMP PRIMARY KEY sortkey,
 hour             INT, 
 day              INT, 
 week             INT, 
@@ -72,9 +58,38 @@ month            INT,
 year             INT, 
 weekday          INT
 )
+diststyle all;
+""")
+
+songplay_table_create = ("""
+CREATE TABLE songplay (
+songplay_id      INT IDENTITY (1, 1) PRIMARY KEY distkey, 
+start_time       TIMESTAMP REFERENCES time(start_time) sortkey,
+user_id          INT     REFERENCES users(user_id),
+level            VARCHAR,
+song_id          VARCHAR REFERENCES song(song_id),
+artist_id        VARCHAR REFERENCES artist(artist_id),
+session_id       INT,
+location         VARCHAR, 
+user_agent       VARCHAR
+)
 """)
 
 ## CREATE STAGING TABLE
+staging_songs_table_create = ("""
+CREATE TABLE staging_songs(
+num_songs        INT,
+artist_id        VARCHAR,
+artist_latitude  FLOAT,
+artist_longitude FLOAT,
+artist_location  VARCHAR,
+artist_name      VARCHAR,
+song_id          VARCHAR distkey sortkey,
+title            VARCHAR,
+duration         FLOAT,
+year             INT
+)
+""")
 
 staging_events_table_create = ("""
 CREATE TABLE staging_events(
@@ -82,7 +97,7 @@ artist           VARCHAR,
 auth             VARCHAR,  
 firstName        VARCHAR,
 gender           VARCHAR,
-iteminSession    INT,
+itemInSession    INT,
 lastName         VARCHAR,
 length           FLOAT,
 level            VARCHAR,
@@ -95,24 +110,10 @@ song             VARCHAR,
 status           INT,
 ts               BIGINT,
 userAgent        VARCHAR,
-userId           INT
+userId           INT distkey sortkey
 )
 """)
 
-staging_songs_table_create = ("""
-CREATE TABLE staging_songs(
-num_songs        INT,
-artist_id        VARCHAR,
-artist_latitude  FLOAT,
-artist_longitude FLOAT,
-artist_location  VARCHAR,
-artist_name      VARCHAR,
-song_id          VARCHAR ,
-title            VARCHAR,
-duration         VARCHAR,
-year             INT
-)
-""")
 
 # STAGING TABLES
 
@@ -139,7 +140,7 @@ user_id,
 level, 
 song_id, 
 artist_id, 
-sessionId, 
+session_id, 
 location, 
 user_agent)
 SELECT DISTINCT
@@ -160,8 +161,8 @@ SELECT DISTINCT
 user_table_insert = ("""
 INSERT INTO users (
 user_id, 
-firstName, 
-lastName, 
+first_name, 
+last_name, 
 gender, 
 level
 )
@@ -195,15 +196,15 @@ FROM staging_songs ss
 artist_table_insert = ("""
 INSERT INTO artist (
 artist_id        ,
-name             ,
-location         , 
-latitude        , 
-longitude
+artist_name      ,
+artist_location  , 
+artist_latitude  , 
+artist_longitude
 )
 SELECT DISTINCT 
 ss.artist_id,
 ss.artist_name,
-se.location,
+ss.artist_location,
 ss.artist_latitude,
 ss.artist_longitude
 FROM staging_events se JOIN staging_songs ss
@@ -234,9 +235,11 @@ FROM staging_events) """)
 
 # QUERY LISTS
 
-create_table_queries = [staging_events_table_create, staging_songs_table_create, songplay_table_create, user_table_create, song_table_create, artist_table_create, time_table_create]
 
-drop_table_queries = [staging_events_table_drop, staging_songs_table_drop, songplay_table_drop, user_table_drop, song_table_drop, artist_table_drop, time_table_drop]
+drop_table_queries = [staging_events_table_drop, staging_songs_table_drop, user_table_drop, song_table_drop, artist_table_drop, time_table_drop, songplay_table_drop]
+
+create_table_queries = [staging_events_table_create, staging_songs_table_create, user_table_create, song_table_create, artist_table_create, time_table_create, songplay_table_create]
+
 
 copy_table_queries = [staging_events_copy, staging_songs_copy]
 
