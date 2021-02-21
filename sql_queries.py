@@ -64,11 +64,11 @@ diststyle all;
 songplay_table_create = ("""
 CREATE TABLE songplay (
 songplay_id      INT IDENTITY (1, 1) PRIMARY KEY distkey, 
-start_time       TIMESTAMP REFERENCES time(start_time) sortkey,
-user_id          INT     REFERENCES users(user_id),
+start_time       TIMESTAMP NOT NULL REFERENCES time(start_time) sortkey,
+user_id          INT       NOT NULL REFERENCES users(user_id),
 level            VARCHAR,
-song_id          VARCHAR REFERENCES song(song_id),
-artist_id        VARCHAR REFERENCES artist(artist_id),
+song_id          VARCHAR   NOT NULL REFERENCES song(song_id),
+artist_id        VARCHAR   NOT NULL REFERENCES artist(artist_id),
 session_id       INT,
 location         VARCHAR, 
 user_agent       VARCHAR
@@ -152,10 +152,13 @@ SELECT DISTINCT
         se.sessionId,
         se.location,
         se.userAgent
-    FROM staging_events se
-        LEFT JOIN staging_songs ss
-            ON se.song = ss.title
-        WHERE se.page='NextSong' ;
+FROM staging_events se
+    LEFT JOIN staging_songs ss
+        ON se.song = ss.title
+WHERE se.page='NextSong'
+    AND se.userId IS NOT NULL
+    AND ss.song_id IS NOT NULL
+    AND ss.artist_id IS NOT NULL;
 """)
 
 user_table_insert = ("""
@@ -174,6 +177,7 @@ se.gender,
 se.level
 FROM staging_events se 
 WHERE page='NextSong' 
+AND se.userId IS NOT NULL
 """)
 
 song_table_insert = ("""
@@ -191,6 +195,7 @@ ss.artist_id,
 ss.year,
 ss.duration
 FROM staging_songs ss
+WHERE ss.song_id IS NOT NULL
 """)
 
 artist_table_insert = ("""
@@ -207,10 +212,13 @@ ss.artist_name,
 ss.artist_location,
 ss.artist_latitude,
 ss.artist_longitude
-FROM staging_events se JOIN staging_songs ss
-ON (se.artist=ss.artist_name AND
-se.song=ss.title AND
-se.length=ss.duration)""")
+FROM staging_events se 
+JOIN staging_songs ss
+    ON (se.artist=ss.artist_name 
+    AND se.song=ss.title 
+    AND se.length=ss.duration)
+WHERE ss.artist_id IS NOT NULL
+""")
 
 time_table_insert = ("""
 INSERT INTO time (

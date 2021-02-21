@@ -13,7 +13,6 @@ def drop_tables(cur, conn):
         print('table dropped', query)
         
 
-
 def create_tables(cur, conn):
     """
     - create staging table and analytical table in redshift cluster

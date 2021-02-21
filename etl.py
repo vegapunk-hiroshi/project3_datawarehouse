@@ -3,7 +3,7 @@ import psycopg2
 from sql_queries import copy_table_queries, insert_table_queries
 import pandas as pd
 
-def load_staging_tables(cur,conn):
+def load_staging_tables(cur, conn):
     """
     - copying the data from json file into the staging table at redshift
     """
@@ -14,7 +14,7 @@ def load_staging_tables(cur,conn):
         print(query, 'copied the data from s3 to staging table in redshift')
 
 
-def insert_tables(cur,conn):
+def insert_tables(cur, conn):
     """
     - inserting the staging data to analytical data within redshift
     """
