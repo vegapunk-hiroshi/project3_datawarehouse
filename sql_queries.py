@@ -34,7 +34,7 @@ user_agent       VARCHAR
 
 user_table_create = ("""
 CREATE TABLE users (
-user_id          INT,
+user_id          INT PRIMARY KEY,
 firstName        VARCHAR, 
 lastName         VARCHAR, 
 gender           VARCHAR, 
@@ -44,7 +44,7 @@ level            VARCHAR
 
 song_table_create = ("""
 CREATE TABLE song (
-song_id          VARCHAR,
+song_id          VARCHAR PRIMARY KEY,
 title            VARCHAR, 
 artist_id        VARCHAR, 
 year             INT, 
@@ -54,17 +54,17 @@ duration         VARCHAR
 
 artist_table_create = ("""
 CREATE TABLE artist (
-artist_id        VARCHAR,
+artist_id        VARCHAR PRIMARY KEY,
 name             VARCHAR,
 location         VARCHAR, 
-latitude        FLOAT, 
+latitude         FLOAT, 
 longitude        FLOAT
 )
 """)
 
 time_table_create = ("""
 CREATE TABLE time (
-start_time       TIMESTAMP,
+start_time       TIMESTAMP PRIMARY KEY,
 hour             INT, 
 day              INT, 
 week             INT, 

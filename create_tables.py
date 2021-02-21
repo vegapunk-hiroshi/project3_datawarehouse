@@ -7,11 +7,11 @@ def drop_tables(cur, conn):
     - drop all tables if exist.
     """
     for query in drop_table_queries:
-        
+        print('*'*30)
         cur.execute(query)
         conn.commit()
         print('table dropped', query)
-        print('*'*30)
+        
 
 
 def create_tables(cur, conn):
@@ -19,11 +19,10 @@ def create_tables(cur, conn):
     - create staging table and analytical table in redshift cluster
     """
     for query in create_table_queries:
-
+        print('*'*30)
         cur.execute(query)
         conn.commit()
         print('table created', query)
-        print('*'*30)
 
 
 def main():
@@ -37,6 +36,7 @@ def main():
     config = configparser.ConfigParser()
     config.read('dwh.cfg')
     
+    print('*'*30)
     conn = psycopg2.connect("host={} dbname={} user={} password={} port={}".format(*config['CLUSTER'].values()))
     print('connected to redshift cluster')
     

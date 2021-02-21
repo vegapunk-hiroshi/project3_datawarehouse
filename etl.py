@@ -8,6 +8,7 @@ def load_staging_tables(cur,conn):
     - copying the data from json file into the staging table at redshift
     """
     for query in copy_table_queries:
+        print('*'*30)
         cur.execute(query)
         conn.commit()
         print(query, 'copied the data from s3 to staging table in redshift')
@@ -18,10 +19,10 @@ def insert_tables(cur,conn):
     - inserting the staging data to analytical data within redshift
     """
     for query in insert_table_queries:
+        print('*'*30)
         cur.execute(query)
         conn.commit()
         print(query, 'inserted the data to staging table to fact and dimensional table')
-        print('*'*30)
 
 def main():
     """
@@ -34,10 +35,11 @@ def main():
     config = configparser.ConfigParser()
     config.read('dwh.cfg')
     
+    print('*'*30)
     conn = psycopg2.connect("host={} dbname={} user={} password={} port={}"
                             .format(*config['CLUSTER'].values()))
     print('connected to redshift cluster')
-    print('*'*30)
+    
 
     cur = conn.cursor()
     
