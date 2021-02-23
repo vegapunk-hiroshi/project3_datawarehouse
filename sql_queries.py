@@ -19,7 +19,7 @@ time_table_drop = "DROP TABLE IF EXISTS time CASCADE"
 # CREATE ANALYTICAL TABLES
 user_table_create = """
 CREATE TABLE users (
-user_id          INT PRIMARY KEY sortkey, 
+user_id          INT NOT NULL PRIMARY KEY sortkey, 
 first_name       VARCHAR, 
 last_name        VARCHAR, 
 gender           VARCHAR, 
@@ -30,9 +30,9 @@ diststyle all;
 
 song_table_create = """
 CREATE TABLE song (
-song_id          VARCHAR PRIMARY KEY sortkey distkey,
+song_id          VARCHAR NOT NULL PRIMARY KEY sortkey distkey,
 title            VARCHAR,
-artist_id        VARCHAR, 
+artist_id        VARCHAR NOT NULL, 
 year             INT, 
 duration         FLOAT
 )
@@ -40,7 +40,7 @@ duration         FLOAT
 
 artist_table_create = ("""
 CREATE TABLE artist (
-artist_id        VARCHAR PRIMARY KEY sortkey distkey,
+artist_id        VARCHAR NOT NULL PRIMARY KEY sortkey distkey,
 artist_name      VARCHAR,
 artist_location  VARCHAR, 
 artist_latitude  FLOAT, 
@@ -50,7 +50,7 @@ artist_longitude FLOAT
 
 time_table_create = ("""
 CREATE TABLE time (
-start_time       TIMESTAMP PRIMARY KEY sortkey,
+start_time       TIMESTAMP NOT NULL PRIMARY KEY sortkey,
 hour             INT, 
 day              INT, 
 week             INT, 
